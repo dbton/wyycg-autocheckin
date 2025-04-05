@@ -2,6 +2,7 @@ import sys
 import requests as r
 import json
 import telepot
+import base64
 
 tele_enable = False
 sc_enable = False
@@ -88,6 +89,24 @@ def getme(url, cookie):
     result = r.get(url=url, headers=header)
     return result
 
+def decrypt(encrypted_str: str) -> str:
+    e = 181
+
+    # 1. Base64 解码为字节数组
+    decoded_bytes = base64.b64decode(encrypted_str)
+    
+    # 2. 逐字节解密运算
+    decrypted_bytes = bytearray()
+    for byte in decoded_bytes:
+        decrypted_byte = (byte - e + 256) % 256  # 处理负数并取模
+        decrypted_bytes.append(decrypted_byte)
+    
+    # 3. 转换为 UTF-8 字符串（兼容非文本数据）
+    try:
+        return decrypted_bytes.decode('utf-8')
+    except UnicodeDecodeError:
+        return decrypted_bytes.hex()  # 非文本返回十六进制
+
 
 def send(id, message):
     if tele_enable:
@@ -157,7 +176,7 @@ if __name__ == "__main__":
                 success.append(cookie)
                 msg.append(message)
             elif not signerror:
-                message = '第{}个账号签到失败，回显状态码为{}，具体错误信息如下：{}'.format(cookies.index(i) + 1, sign_return.status_code, sign_return.text)
+                message = '第{}个账号签到失败，回显状态码为{}，具体错误信息如下：{}'.format(cookies.index(i) + 1, sign_return.status_code, decrypt(sign_return.text))
                 failure.append(cookie)
                 msg.append(message)
     outputmsg = str(msg).replace("[", '').replace(']', '').replace(',', '<br>').replace('\'', '')

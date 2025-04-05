@@ -2,17 +2,11 @@ name: AutoCheckin
 
 on: 
   workflow_dispatch:
-  release:
-    types: [published]
-  push:
-    tags:
-    - 'v*'
-  #  branches: 
-  #    - master
+
   schedule:
     - cron: "0 2 * * *"
   watch:
-    types: [started]
+    types: started
    
 jobs:
   build:
@@ -30,3 +24,10 @@ jobs:
     - name: Run script
       run: |
         python3 main.py "${{ secrets.cookie }}" "${{ secrets.teleid }}" "${{ secrets.teletoken }}" "${{ secrets.SCKEY }}" "${{ secrets.QQKEY }}" "${{ secrets.PPKEY }}"
+    - name: 🎉 Delete old workflow run
+      uses: Mattraks/delete-workflow-runs@main
+      with:
+        token: ${{ github.token }}
+        repository: ${{ github.repository }}
+        retain_days: 0
+        keep_minimum_runs: 3
